@@ -10,10 +10,20 @@ This chart deploys [OpenClaw Gateway](https://github.com/openclaw/openclaw) on a
 
 ## Quick Start
 
+1. Add the Helm repository:
 ```console
 helm repo add openclaw https://elaugaste.github.io/openclaw-helm/
 helm repo update
-helm install openclaw openclaw/openclaw
+```
+
+2. Create your local `values.yaml` from the template:
+```console
+helm show values openclaw/openclaw > my-values.yaml
+```
+
+3. Edit `my-values.yaml` and install the chart:
+```console
+helm install openclaw openclaw/openclaw -f my-values.yaml
 ```
 
 ## Configuration
