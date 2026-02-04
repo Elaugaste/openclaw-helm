@@ -1,0 +1,21 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+.DS_Store
+
+# Helm
+.helmignore
+# Local values
+values2.yaml
+*.local.yaml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Build
+bin/
+tmp/
+*.log

@@ -1,0 +1,9 @@
+.git
+.gitignore
+.github
+node_modules
+bin
+tmp
+values2.yaml
+*.local.yaml
+*.log

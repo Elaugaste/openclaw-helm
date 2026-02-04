@@ -1,0 +1,150 @@
+# Default values for openclaw.
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/elaugaste/openclaw
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  automount: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  fsGroup: 1000
+
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+
+service:
+  type: ClusterIP
+  port: 18789
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
+    # nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
+    # nginx.ingress.kubernetes.io/server-snippets: |
+    #   location / {
+    #     proxy_set_header Upgrade $http_upgrade;
+    #     proxy_set_header Connection "upgrade";
+    #   }
+  hosts:
+    - host: openclaw.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+  tls: []
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 100m
+    memory: 256Mi
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+
+# Environment variables
+env:
+  - name: OPENCLAW_GATEWAY_BIND
+    value: "lan"
+  - name: OPENCLAW_GATEWAY_PORT
+    value: "18789"
+
+# Authentication
+auth:
+  enabled: false
+  # If enabled and token is empty, a random 64-character token will be generated
+  token: ""
+  # existingSecret: "name-of-existing-secret"
+  # secretKey: "gateway-token"
+
+# Configuration files
+configFiles:
+  heartbeat: |
+    {
+      agents: {
+        defaults: {
+          heartbeat: {
+            every: "30m",
+            target: "last",
+            // activeHours: { start: "08:00", end: "24:00" },
+            // includeReasoning: true, // optional: send separate `Reasoning:` message too
+          },
+        },
+      },
+    }
+  openclawJson: |
+    {
+    "logging": {
+      "file": "",
+      "redactSensitive": "tools"
+    },
+    "agents": {
+      "defaults": {
+        "workspace": "/home/node/.openclaw/workspace",
+        "maxConcurrent": 4,
+        "subagents": {
+          "maxConcurrent": 8
+        }
+      }
+    },
+    "messages": {
+      "ackReactionScope": "group-mentions"
+    },
+    "commands": {
+      "native": "auto",
+      "nativeSkills": "auto"
+    },
+    "channels": {
+      "telegram": {
+        "enabled": true,
+        "dmPolicy": "pairing",
+        "botToken": "***",
+        "groupPolicy": "allowlist",
+        "streamMode": "partial"
+      }
+    },
+    "plugins": {
+      "entries": {
+        "telegram": {
+          "enabled": true
+        }
+      }
+    }
+    }
+
+persistence:
+  config:
+    enabled: true
+    storageClass: ""
+    accessMode: ReadWriteOnce
+    size: 1Gi
+    mountPath: /home/node/.openclaw
+
+volumes: []
+volumeMounts: []
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
