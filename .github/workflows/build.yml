@@ -13,7 +13,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME: ${{ github.repository_owner }}/openclaw
 
 jobs:
   build:
@@ -39,9 +38,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Lowercase image name
+        run: |
+          echo "IMAGE_NAME=${GITHUB_REPOSITORY_OWNER,,}/openclaw" >> $GITHUB_ENV
+
       - name: Build and push Docker image
         run: |
-          # Мы используем make build, но Buildx внутри Actions работает лучше через прямой вызов или настройку DOCKER_DEFAULT_PLATFORM
           export DOCKER_DEFAULT_PLATFORM=linux/amd64
           make build REGISTRY=${{ env.REGISTRY }} IMAGE_NAME=${{ env.IMAGE_NAME }} IMAGE_TAG=latest
           make push REGISTRY=${{ env.REGISTRY }} IMAGE_NAME=${{ env.IMAGE_NAME }} IMAGE_TAG=latest
