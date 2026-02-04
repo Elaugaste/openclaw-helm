@@ -11,7 +11,9 @@ This chart deploys [OpenClaw Gateway](https://github.com/openclaw/openclaw) on a
 ## Quick Start
 
 ```console
-helm install openclaw .
+helm repo add openclaw https://elaugaste.github.io/openclaw-helm/
+helm repo update
+helm install openclaw openclaw/openclaw
 ```
 
 ## Configuration
