@@ -27,7 +27,7 @@ clean:
 	@rm -rf /tmp/openclaw-build
 
 helm-lint:
-	helm lint .
+	helm lint charts/openclaw
 
 helm-template:
-	helm template openclaw .
+	helm template openclaw charts/openclaw
