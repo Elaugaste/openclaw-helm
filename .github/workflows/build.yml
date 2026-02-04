@@ -6,10 +6,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - master
-    paths:
-      - 'Makefile'
-      - '.github/workflows/**'
+      - main
 
 env:
   REGISTRY: ghcr.io
