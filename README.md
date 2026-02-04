@@ -1,16 +1,14 @@
 # OpenClaw Helm Chart
 
-This chart deploys OpenClaw Gateway on a Kubernetes cluster.
+This chart deploys [OpenClaw Gateway](https://github.com/openclaw/openclaw) on a Kubernetes cluster.
 
 ## Prerequisites
 
 - Kubernetes 1.19+
 - Helm 3.2.0+
-- PV provisioner support in the underlying infrastructure (if persistence is enabled)
+- PV provisioner support in the underlying infrastructure (e.g., Longhorn, GCP PD, etc.)
 
-## Installing the Chart
-
-To install the chart with the release name `openclaw`:
+## Quick Start
 
 ```console
 helm install openclaw .
@@ -25,32 +23,37 @@ helm install openclaw .
 | `image.tag` | Image tag | `latest` |
 | `service.port` | Service port | `18789` |
 | `ingress.enabled` | Enable ingress | `false` |
-| `persistence.config.enabled` | Enable persistence for ~/.openclaw | `true` |
-| `persistence.config.size` | Persistence size | `1Gi` |
-| `auth.enabled` | Enable HTTP auth | `false` |
-| `env` | Environment variables | See `values.yaml` |
+| `persistence.config.enabled` | Enable persistence for `~/.openclaw` | `true` |
+| `persistence.config.size` | Persistence volume size | `5Gi` |
+| `persistence.config.storageClass` | StorageClass for the volume | `""` |
+| `auth.enabled` | Enable Gateway authentication | `false` |
+| `configFiles.openclawJson` | Content of `openclaw.json` | See `values.yaml` |
+| `configFiles.heartbeat` | Content of `HEARTBEAT.md` | See `values.yaml` |
+
+## Configuration Files
+
+The chart manages two main configuration files via `ConfigMap`:
+1. `~/.openclaw/openclaw.json`: Main application configuration.
+2. `~/.openclaw/workspace/HEARTBEAT.md`: Heartbeat agent settings.
+
+These files are **copied** from the ConfigMap to the persistent volume on every pod start. This ensures that:
+- You can update configurations via `values.yaml` and `helm upgrade`.
+- The application has full **write access** to these files at runtime.
 
 ## Authentication
 
-To enable authentication, set `auth.enabled` to `true`. If `auth.token` is not provided, a random 64-character token will be generated automatically.
+To enable authentication, set `auth.enabled: true`. If `auth.token` is empty, a random 64-character token will be generated and stored in a Kubernetes Secret (`openclaw-auth`).
 
 ```yaml
 auth:
   enabled: true
 ```
 
-Or provide a custom token:
+The token is injected into the container as `OPENCLAW_GATEWAY_TOKEN`.
 
-```yaml
-auth:
-  enabled: true
-  existingSecret: "my-k8s-secret"
-  secretKey: "token-key"
-```
+## Ingress & WebSocket
 
-## Ingress Example
-
-To enable ingress with a custom host:
+OpenClaw Gateway uses port `18789` for both HTTP and WebSocket traffic. For stable WebSocket connections, increase proxy timeouts in your Ingress controller:
 
 ```yaml
 ingress:
@@ -60,22 +63,26 @@ ingress:
     nginx.ingress.kubernetes.io/proxy-read-timeout: "3600"
     nginx.ingress.kubernetes.io/proxy-send-timeout: "3600"
   hosts:
-    - host: openclaw.example.com
+    - host: openclaw.local
       paths:
         - path: /
           pathType: ImplementationSpecific
 ```
 
-## WebSocket Support
+## Development & Image Build
 
-OpenClaw Gateway uses a single multiplexed port (18789) for both HTTP and WebSocket traffic. When using an Ingress controller, ensure that:
-1. Proxy timeouts are increased (e.g., to 1 hour) to prevent long-lived WebSocket connections from dropping.
-2. The Ingress controller is configured to handle the `Upgrade` and `Connection` headers (most modern controllers do this automatically).
+A `Makefile` is provided to build and push the Docker image (optimized for `linux/amd64`):
 
-## Persistence
+```bash
+# Build the image with additional APT packages
+make build OPENCLAW_DOCKER_APT_PACKAGES="ffmpeg curl"
 
-OpenClaw stores its configuration and workspace in `/home/node/.openclaw`. By default, this chart creates a PersistentVolumeClaim to persist this data.
+# Push to registry
+make push REGISTRY=ghcr.io/elaugaste
+```
 
 ## Security
 
-The pod runs as a non-root user (uid 1000) for security hardening.
+- The pod runs as a non-root user (`uid: 1000`).
+- Config files mounted from Secrets/ConfigMaps have `defaultMode: 0600`.
+- An `initContainer` is used to ensure correct volume permissions (`1000:1000`).
