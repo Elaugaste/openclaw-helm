@@ -1,0 +1,14 @@
+apiVersion: v1
+entries:
+  openclaw:
+  - apiVersion: v2
+    appVersion: 2026.2.3
+    created: "2026-02-04T15:18:35.230068436Z"
+    description: OpenClaw - The Unified AI Gateway. Deployment for Kubernetes.
+    digest: 6a9e7695a461eab2ac4043c9488ad2439c4125f34f37af96f09a0b97fc50fee4
+    name: openclaw
+    type: application
+    urls:
+    - https://github.com/Elaugaste/openclaw-helm/releases/download/openclaw-0.1.1/openclaw-0.1.1.tgz
+    version: 0.1.1
+generated: "2026-02-04T15:18:35.230075229Z"
